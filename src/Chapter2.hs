@@ -14,14 +14,25 @@ class Set s where
 	member :: Ord a => a -> s a -> Bool
 	insert :: Ord a => a -> s a -> s a
 
+class Set t => BST t where
+	getTree :: t a -> Tree a
+
 newtype UnbalancedSet a = UnbalancedSet (Tree a)
-newtype CandidateSet a = CandidateSet (Tree a)
+instance BST UnbalancedSet where
+	getTree (UnbalancedSet t) = t
+
 newtype SharingSet a = SharingSet (Tree a)
+instance BST SharingSet where
+	getTree (SharingSet t) = t
+
+newtype CandidateSet a = CandidateSet (Tree a)
+instance BST CandidateSet where
+	getTree (CandidateSet t) = t
 
 instance Set UnbalancedSet where
 	empty = UnbalancedSet E
 
-	member x (UnbalancedSet t) = member' t
+	member x = member' . getTree
 		where
 			member' E = False
 			member' (T left y right)
@@ -29,7 +40,7 @@ instance Set UnbalancedSet where
 				| x > y = member' right
 				| otherwise = True
 
-	insert x (UnbalancedSet t) = UnbalancedSet $ insert' t
+	insert x = UnbalancedSet . insert' . getTree
 		where
 			insert' E = T E x E
 			insert' s@(T left y right)
@@ -37,27 +48,12 @@ instance Set UnbalancedSet where
 				| x > y = T left y (insert' right)
 				| otherwise = s
 
--- 2.2
-instance Set CandidateSet where
-	empty = CandidateSet E
-
-	member _ (CandidateSet E) = False
-	member x (CandidateSet t@(T _ root _)) = member' t root
-		where
-			member' E p = x == p
-			member' (T left y right) p
-				| x < y = member' left p
-				| otherwise = member' right y
-
-	insert x (CandidateSet t)
-		| UnbalancedSet t' <- insert x $ UnbalancedSet t = CandidateSet t'
-
--- 2.3
 instance Set SharingSet where
 	empty = SharingSet E
 
-	member x (SharingSet t) = member x $ UnbalancedSet t
+	member x = member x . UnbalancedSet . getTree
 
+	-- 2.3
 	insert x (SharingSet t) = SharingSet $ fromMaybe t $ insert' t
 		where
 			insert' E = Just $ T E x E
@@ -65,3 +61,24 @@ instance Set SharingSet where
 				| x < y = (\h -> T h y right) <$> insert' left
 				| x > y = (\h -> T left y h) <$> insert' right
 				| otherwise = Nothing
+
+instance Set CandidateSet where
+	empty = CandidateSet E
+
+	-- 2.2
+	member x = flip member' Nothing . getTree
+		where
+			member' E p = (Just x) == p
+			member' (T left y right) p
+				| x < y = member' left p
+				| otherwise = member' right $ Just y
+
+	-- 2.4
+	insert x (CandidateSet t) = CandidateSet $ fromMaybe t $ insert' t Nothing
+		where
+			insert' E p
+				| (Just x) /= p = Just $ T E x E
+				| otherwise = Nothing
+			insert' (T left y right) p
+				| x < y = (\h -> T h y right) <$> insert' left p
+				| otherwise = (\h -> T left y h) <$> insert' right (Just y)
