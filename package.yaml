@@ -23,7 +23,7 @@ dependencies:
 - base >= 4.7 && < 5
 
 ghc-options:
-- -Wall -Wno-tabs
+- -Wall -Wno-orphans -Wno-tabs
 
 library:
   source-dirs: src
