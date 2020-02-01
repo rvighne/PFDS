@@ -1,2 +1,8 @@
+import System.Exit
+
+import qualified Chapter2Spec
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = do
+	good <- and <$> sequence [Chapter2Spec.runTests]
+	if good then exitSuccess else exitFailure

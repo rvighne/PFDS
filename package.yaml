@@ -22,6 +22,9 @@ description:         Please see the README on GitHub at <https://github.com/rvig
 dependencies:
 - base >= 4.7 && < 5
 
+ghc-options:
+- -Wall -Wno-tabs
+
 library:
   source-dirs: src
 
@@ -46,3 +49,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - Okasaki
+    - QuickCheck
