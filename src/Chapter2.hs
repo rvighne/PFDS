@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeSynonymInstances #-}
 module Chapter2 where
 
 import Data.Maybe (fromMaybe)
@@ -15,28 +14,32 @@ class Set s where
 	member :: Ord a => a -> s a -> Bool
 	insert :: Ord a => a -> s a -> s a
 
-type UnbalancedSet = Tree
-newtype CandidateSet a = CandidateSet (UnbalancedSet a)
-newtype SharingSet a = SharingSet (UnbalancedSet a)
+newtype UnbalancedSet a = UnbalancedSet (Tree a)
+newtype CandidateSet a = CandidateSet (Tree a)
+newtype SharingSet a = SharingSet (Tree a)
 
 instance Set UnbalancedSet where
-	empty = E
+	empty = UnbalancedSet E
 
-	member _ E = False
-	member x (T left y right)
-		| x < y = member x left
-		| x > y = member x right
-		| otherwise = True
+	member x (UnbalancedSet t) = member' t
+		where
+			member' E = False
+			member' (T left y right)
+				| x < y = member' left
+				| x > y = member' right
+				| otherwise = True
 
-	insert x E = T E x E
-	insert x t@(T left y right)
-		| x < y = T (insert x left) y right
-		| x > y = T left y (insert x right)
-		| otherwise = t
+	insert x (UnbalancedSet t) = UnbalancedSet $ insert' t
+		where
+			insert' E = T E x E
+			insert' s@(T left y right)
+				| x < y = T (insert' left) y right
+				| x > y = T left y (insert' right)
+				| otherwise = s
 
 -- 2.2
 instance Set CandidateSet where
-	empty = CandidateSet empty
+	empty = CandidateSet E
 
 	member _ (CandidateSet E) = False
 	member x (CandidateSet t@(T _ root _)) = member' t root
@@ -46,13 +49,14 @@ instance Set CandidateSet where
 				| x < y = member' left p
 				| otherwise = member' right y
 
-	insert x (CandidateSet t) = CandidateSet $ insert x t
+	insert x (CandidateSet t)
+		| UnbalancedSet t' <- insert x $ UnbalancedSet t = CandidateSet t'
 
 -- 2.3
 instance Set SharingSet where
-	empty = SharingSet empty
+	empty = SharingSet E
 
-	member x (SharingSet t) = member x t
+	member x (SharingSet t) = member x $ UnbalancedSet t
 
 	insert x (SharingSet t) = SharingSet $ fromMaybe t $ insert' t
 		where
