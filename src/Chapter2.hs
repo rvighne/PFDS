@@ -1,6 +1,7 @@
 module Chapter2 where
 
-import Data.Maybe (fromMaybe)
+import Prelude hiding (lookup)
+import Data.Maybe
 
 -- 2.1
 suffixes :: [a] -> [[a]]
@@ -15,19 +16,19 @@ class Set s where
 	member :: Ord a => a -> s a -> Bool
 	insert :: Ord a => a -> s a -> s a
 
-class Set t => BST t where
+class Set t => BSTSet t where
 	getTree :: t a -> Tree a
 
 newtype UnbalancedSet a = UnbalancedSet (Tree a)
-instance BST UnbalancedSet where
+instance BSTSet UnbalancedSet where
 	getTree (UnbalancedSet t) = t
 
 newtype SharingSet a = SharingSet (Tree a)
-instance BST SharingSet where
+instance BSTSet SharingSet where
 	getTree (SharingSet t) = t
 
 newtype CandidateSet a = CandidateSet (Tree a)
-instance BST CandidateSet where
+instance BSTSet CandidateSet where
 	getTree (CandidateSet t) = t
 
 instance Set UnbalancedSet where
@@ -90,3 +91,30 @@ complete _ 0 = E
 complete x d = T t x t
 	where
 		t = complete x $ d - 1
+
+class FiniteMap m where
+	emptyMap :: m k v
+	bind :: Ord k => k -> v -> m k v -> m k v
+	lookup :: Ord k => k -> m k v -> Maybe v
+
+-- 2.6
+data UnbalancedMap k v = UnbalancedMap (Tree (k, v))
+
+instance FiniteMap UnbalancedMap where
+	emptyMap = UnbalancedMap E
+
+	bind k v (UnbalancedMap m) = UnbalancedMap $ bind' m
+		where
+			bind' E = T E (k, v) E
+			bind' (T left cell@(q, _) right)
+				| k < q = T (bind' left) cell right
+				| k > q = T left cell (bind' right)
+				| otherwise = T left (k, v) right
+
+	lookup k (UnbalancedMap m) = lookup' m
+		where
+			lookup' E = Nothing
+			lookup' (T left (q, v) right)
+				| k < q = lookup' left
+				| k > q = lookup' right
+				| otherwise = Just v

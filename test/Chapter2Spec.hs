@@ -7,13 +7,15 @@ import Chapter2
 
 import Test.QuickCheck
 
+import Prelude hiding (lookup)
 import Data.List (tails)
-import Control.Monad (liftM2)
+import Control.Monad
 
 deriving instance Eq a => Eq (Tree a)
 
 deriving instance Show a => Show (SharingSet a)
 deriving instance Show a => Show (CandidateSet a)
+deriving instance (Show k, Show v) => Show (UnbalancedMap k v)
 
 instance (Ord a, Arbitrary a) => Arbitrary (SharingSet a) where
 	arbitrary = oneof [return empty, liftM2 insert arbitrary arbitrary]
@@ -21,11 +23,14 @@ instance (Ord a, Arbitrary a) => Arbitrary (SharingSet a) where
 instance (Ord a, Arbitrary a) => Arbitrary (CandidateSet a) where
 	arbitrary = oneof [return empty, liftM2 insert arbitrary arbitrary]
 
+instance (Ord k, Arbitrary k, Arbitrary v) => Arbitrary (UnbalancedMap k v) where
+	arbitrary = oneof [return emptyMap, liftM3 bind arbitrary arbitrary arbitrary]
+
 -- 2.1
 prop_suffixesIsTails :: Eq a => [a] -> Bool
 prop_suffixesIsTails xs = suffixes xs == tails xs
 
-sameAsUB :: (BST s, Ord a, Eq r) => (forall z. BST z => z a -> r) -> s a -> Bool
+sameAsUB :: (BSTSet s, Ord a, Eq r) => (forall z. BSTSet z => z a -> r) -> s a -> Bool
 sameAsUB f s = (f s) == (f $ UnbalancedSet $ getTree s)
 
 -- 2.2
@@ -48,6 +53,10 @@ prop_completeNodeCount = do
 	where
 		count E = 0
 		count (T left _ right) = (count left) + 1 + (count right)
+
+-- 2.6
+prop_lookupSameAsBound :: (Ord k, Eq v) => k -> v -> UnbalancedMap k v -> Bool
+prop_lookupSameAsBound k v m = lookup k (bind k v m) == Just v
 
 return []
 runTests :: IO Bool
