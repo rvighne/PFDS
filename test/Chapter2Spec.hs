@@ -12,7 +12,6 @@ import Control.Monad (liftM2)
 
 deriving instance Eq a => Eq (Tree a)
 
-deriving instance Show a => Show (Tree a)
 deriving instance Show a => Show (SharingSet a)
 deriving instance Show a => Show (CandidateSet a)
 
@@ -40,6 +39,15 @@ prop_sharingInsertIsUBInsert x = sameAsUB $ getTree . insert x
 -- 2.4
 prop_candidateInsertIsUBInsert :: Ord a => a -> CandidateSet a -> Bool
 prop_candidateInsertIsUBInsert x = sameAsUB $ getTree . insert x
+
+-- 2.5(a)
+prop_completeNodeCount :: Gen Bool
+prop_completeNodeCount = do
+	d <- choose (0, 10) :: Gen Integer
+	return $ (count $ complete undefined d) == 2 ^ d - 1
+	where
+		count E = 0
+		count (T left _ right) = (count left) + 1 + (count right)
 
 return []
 runTests :: IO Bool

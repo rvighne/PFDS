@@ -8,6 +8,7 @@ suffixes [] = [[]]
 suffixes list@(_:suf) = list : suffixes suf
 
 data Tree a = E | T (Tree a) a (Tree a)
+	deriving Show
 
 class Set s where
 	empty :: s a
@@ -82,3 +83,10 @@ instance Set CandidateSet where
 			insert' (T left y right) p
 				| x < y = (\h -> T h y right) <$> insert' left p
 				| otherwise = (\h -> T left y h) <$> insert' right (Just y)
+
+-- 2.5(a)
+complete :: Integral n => a -> n -> Tree a
+complete _ 0 = E
+complete x d = T t x t
+	where
+		t = complete x $ d - 1
