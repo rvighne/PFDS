@@ -9,9 +9,11 @@ import Test.QuickCheck
 
 import Prelude hiding (lookup)
 import Data.List (tails)
+import Data.Maybe
 import Control.Monad
 
 deriving instance Eq a => Eq (Tree a)
+deriving instance Show a => Show (Tree a)
 
 deriving instance Show a => Show (SharingSet a)
 deriving instance Show a => Show (CandidateSet a)
@@ -30,7 +32,7 @@ instance (Ord k, Arbitrary k, Arbitrary v) => Arbitrary (UnbalancedMap k v) wher
 prop_suffixesIsTails :: Eq a => [a] -> Bool
 prop_suffixesIsTails xs = suffixes xs == tails xs
 
-sameAsUB :: (BSTSet s, Ord a, Eq r) => (forall z. BSTSet z => z a -> r) -> s a -> Bool
+sameAsUB :: (BSTSet s, Eq r) => (forall z. BSTSet z => z a -> r) -> s a -> Bool
 sameAsUB f s = (f s) == (f $ UnbalancedSet $ getTree s)
 
 -- 2.2
@@ -46,13 +48,22 @@ prop_candidateInsertIsUBInsert :: Ord a => a -> CandidateSet a -> Bool
 prop_candidateInsertIsUBInsert x = sameAsUB $ getTree . insert x
 
 -- 2.5(a)
-prop_completeNodeCount :: Gen Bool
-prop_completeNodeCount = do
-	d <- choose (0, 10) :: Gen Integer
-	return $ (count $ complete undefined d) == 2 ^ d - 1
+prop_completeNodeCount :: Integral n => NonNegative n -> Property
+prop_completeNodeCount (NonNegative d) = d < 16 ==> (count $ complete () d) == 2 ^ d - 1
 	where
 		count E = 0
 		count (T left _ right) = (count left) + 1 + (count right)
+
+-- 2.5(b)
+prop_isBalanced :: Integral n => NonNegative n -> Bool
+prop_isBalanced = isJust . depth . balanced () . getNonNegative
+	where
+		depth E = Just 0
+		depth (T left _ right)
+			| Just ld <- (depth left)
+			, Just lr <- (depth right)
+			= if abs (ld - lr) <= 1 then Just (1 + max ld lr) else Nothing
+			| otherwise = Nothing
 
 -- 2.6
 prop_lookupSameAsBound :: (Ord k, Eq v) => k -> v -> UnbalancedMap k v -> Bool

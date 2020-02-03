@@ -9,7 +9,6 @@ suffixes [] = [[]]
 suffixes list@(_:suf) = list : suffixes suf
 
 data Tree a = E | T (Tree a) a (Tree a)
-	deriving Show
 
 class Set s where
 	empty :: s a
@@ -91,6 +90,18 @@ complete _ 0 = E
 complete x d = T t x t
 	where
 		t = complete x $ d - 1
+
+-- 2.5(b)
+balanced :: Integral n => a -> n -> Tree a
+balanced x = fst . create2
+	where
+		create2 0 = (E, T E x E)
+		create2 n
+			| r == 0 = (T s x s, T t x s)
+			| otherwise = (T t x s, T t x t)
+			where
+				(q, r) = (n - 1) `quotRem` 2
+				(s, t) = create2 q
 
 class FiniteMap m where
 	emptyMap :: m k v
