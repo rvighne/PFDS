@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE Rank2Types #-}
 module Chapter2Spec where
 
@@ -10,8 +12,11 @@ import Test.QuickCheck
 import Prelude hiding (lookup)
 import Data.List (tails)
 import Data.Maybe
+import Data.Bifunctor
 import Control.Monad
 
+deriving instance Functor Tree
+deriving instance Foldable Tree
 deriving instance Eq a => Eq (Tree a)
 deriving instance Show a => Show (Tree a)
 
@@ -49,10 +54,7 @@ prop_candidateInsertIsUBInsert x = sameAsUB $ getTree . insert x
 
 -- 2.5(a)
 prop_completeNodeCount :: Integral n => NonNegative n -> Property
-prop_completeNodeCount (NonNegative d) = d < 16 ==> (count $ complete () d) == 2 ^ d - 1
-	where
-		count E = 0
-		count (T left _ right) = (count left) + 1 + (count right)
+prop_completeNodeCount (NonNegative d) = d < 16 ==> (length $ complete () d) == 2 ^ d - 1
 
 -- 2.5(b)
 prop_isBalanced :: Integral n => NonNegative n -> Bool
@@ -68,6 +70,10 @@ prop_isBalanced = isJust . depth . balanced () . getNonNegative
 -- 2.6
 prop_lookupSameAsBound :: (Ord k, Eq v) => k -> v -> UnbalancedMap k v -> Bool
 prop_lookupSameAsBound k v m = lookup k (bind k v m) == Just v
+
+-- 2.6
+prop_lookupNonExistent :: Integral k => Negative k -> UnbalancedMap (NonNegative k) v -> Bool
+prop_lookupNonExistent (Negative q) (UnbalancedMap t) = isNothing $ lookup q $ UnbalancedMap $ first getNonNegative <$> t
 
 return []
 runTests :: IO Bool
