@@ -1,14 +1,10 @@
-name:                Okasaki
+name:                PFDS
 version:             0.1.0.0
-github:              "rvighne/Okasaki"
+github:              "rvighne/PFDS"
 license:             BSD3
 author:              "Rohit Vighne"
 maintainer:          "rohit.vighne@gmail.com"
 copyright:           "2020 Rohit Vighne"
-
-extra-source-files:
-- README.md
-- ChangeLog.md
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -17,7 +13,7 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/rvighne/Okasaki#readme>
+description:         Please see the README on GitHub at <https://github.com/rvighne/PFDS#readme>
 
 dependencies:
 - base >= 4.7 && < 5
@@ -29,7 +25,7 @@ library:
   source-dirs: src
 
 executables:
-  Okasaki-exe:
+  PFDS-exe:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -37,10 +33,10 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - Okasaki
+    - PFDS
 
 tests:
-  Okasaki-test:
+  PFDS-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -48,5 +44,5 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - Okasaki
+    - PFDS
     - QuickCheck
